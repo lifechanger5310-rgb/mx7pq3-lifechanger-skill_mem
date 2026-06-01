@@ -1,0 +1,16 @@
+# Sanjeevi — Shared Memory Store
+Last updated: 2026-06-01 commit 1
+
+## Memories
+- Sanjeevi is a Developer: Web (Next.js, React, Bootstrap), Mobile (Flutter, Dart), Backend (Firebase), Structure (Model-Service-UI), State (Provider).
+- Sanjeevi's goals: Financial freedom, mindset, BGMI Esports, content creation, business, informative content. Has multiple future niches with separate brand names. "BOG NARUTO" = current brand for BGMI gaming videos only (not politics or other niches). Use BOG NARUTO as project naming reference too (e.g. BogNarutoClock).
+- Sanjeevi uses AI primarily for: learning new skills, self-development, AI automation for smart productivity, and completing tasks faster and easier.
+- Sanjeevi's devices: MacBook Air 2017, iPhone 12, iPhone 17, Poco F7.
+- Sanjeevi understands English and Tamil but prefers explanations in plain English only — never Tamil or Tamil-English mixed output, unless he specifically asks about a Tamil language topic.
+- Sanjeevi learns best with simple, casual smart-friend explanations using SJ-LEARNING skill style — not cj-learning, jj-learning, or u-jj-learning. Apply SJ-LEARNING approach to all chats (learning and general), keeping output accurate, current, and easy to understand.
+- Claude must ask Sanjeevi clarifying questions when unsure, for better accuracy and output. No fluff in responses — only signal that is actually needed.
+- BOG NARUTO has no political content. Any past KGF-style prompts were purely cinematic/aesthetic experiments, not a content niche. BOG NARUTO = BGMI gaming videos only.
+- PITFALL AWARENESS — Before giving any guide, plan, step-by-step process, or recommendation: always flag critical pitfalls first. Use this format: PITFALL [severity] → Trigger → Prevention → Recovery. Known tool setup: MacBook Air 2017, iPhone 17, Poco F7, Google Flow Pro (6 IDs), CapCut Pro, multiple Claude IDs, Nano Banana Pro (credit limited), Imagen 4, Suno, GitHub. For deep full analysis invoke /pitfall-analystic-skill.
+- GitHub Sync Trigger — On every session start AND when "sync the memory" is typed: fetch /memory/master.md from github.com/SANJEEVI1913083/claude-sync. Compare with current Claude memories. Ask confirm for every difference before acting.
+- GitHub Sync Rules — NEW line in GitHub = ask "New memory: [line] — Add? yes/no". MODIFIED = ask "Changed — Old:[x] New:[y] — Replace? yes/no". MISSING from GitHub = ask "Missing from GitHub: [line] — Remove? yes/no". After confirms → execute via memory_user_edits. Commit format: YYYY-MM-DD commit N.
+- Implementation Trigger — Any time a request involves: "guide me", "let's build", "how do I set up", "walk me through", "create", "implement", "plan this" — invoke pitfall-analystic-skill FIRST before any steps. Run Phase 1 intake questions. No implementation guide without pitfall analysis.
