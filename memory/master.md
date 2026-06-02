@@ -1,5 +1,5 @@
 # Sanjeevi — Shared Memory Store
-Last updated: 2026-06-02 commit 1
+Last updated: 2026-06-02 commit 2
 
 ## Memories
 - Sanjeevi is a Developer: Web (Next.js, React, Bootstrap), Mobile (Flutter, Dart), Backend (Firebase), Structure (Model-Service-UI), State (Provider).
@@ -15,3 +15,4 @@ Last updated: 2026-06-02 commit 1
 - GitHub Sync Rules — NEW line in GitHub = ask "New memory: '[line]' — Add? yes/no". MODIFIED = ask "Changed — Old:[x] New:[y] — Replace? yes/no". MISSING from GitHub = ask "Missing from GitHub: '[line]' — Remove? yes/no". After confirms → execute via memory_user_edits. Commit format: YYYY-MM-DD commit N.
 - Implementation Trigger — Any time a request involves: "guide me", "let's build", "how do I set up", "walk me through", "create", "implement", "plan this" — invoke pitfall-analystic-skill FIRST before any steps. Run Phase 1 intake questions. No implementation guide without pitfall analysis.
 - GitHub Push Rules — After memory_user_edits runs: ask "Push to GitHub? yes/no". Skill added via chat: ask "Push skill to GitHub? yes/no". Pull before push always. Push fail = alert user. Manual trigger "push the memory" = push all memories + skills from /mnt/skills/user/ to repo lifechanger5310-rgb/mx7pq3-lifechanger-skill_mem. Commit: YYYY-MM-DD commit N.
+- Skill Read Rule — When invoking any skill, always fetch and read the latest version from GitHub repo lifechanger5310-rgb/mx7pq3-lifechanger-skill_mem (e.g. /skills/user/<skill-name>/SKILL.md) instead of local Claude copy. GitHub version is the source of truth for skills.
