@@ -117,6 +117,13 @@ Every prompt Sanjeevi gets from this skill follows this structure:
 - Too long = conflicting details = generation artifacts
 - Never use bullet points — write as a flowing paragraph
 
+### Character Limit
+- **Hard cap: 895 characters** (counts spaces and punctuation)
+- Always count characters before outputting — never guess
+- If over limit: trim from style/mood/camera detail first
+- Never trim Subject + Action + Environment — those are the core
+- A prompt within word count can still exceed 895 chars — check both
+
 ### Language Style
 - Present tense, active voice: "A wolf runs..." not "A wolf that is running..."
 - Descriptive but not poetic fluff — every word should instruct, not decorate
@@ -324,6 +331,7 @@ Word count  → 62 words
 
 ```
 [ ] Is it 40–80 words?
+[ ] Is it under 895 characters? → Count before sending. Trim style/mood/camera if over.
 [ ] Does it follow Subject + Action + Environment + Lighting + Camera + Style + Mood?
 [ ] Does it name any real person? → Replace
 [ ] Does it name any IP character? → Replace with appearance
