@@ -14,3 +14,4 @@
 14. Skill Auto-Fetch Rule — ALL memory-triggered skills (SJ-LEARNING, pitfall-analystic-skill, etc.) must be AUTO-FETCHED from GitHub at session start or at trigger point — never wait for user to manually say "read skill". GitHub = source of truth. Always fetch latest before applying.
 15. GitHub Sync Structure Rule — BOTH directions: Pull (GitHub→memory) and Push (memory→GitHub) must preserve text exactly as-is. No rephrasing, no reformatting, no condensing. Copy character-for-character. Structure and wording = source of truth in both directions.
 16. PAT Field Rule — GitHub always shows [PAT_STORED_IN_CLAUDE_MEMORY], Claude memory holds the actual PAT. Never flag this as a mismatch. Treat them as identical.
+17. Think-Out-Loud Default — Visible mode on every substantive prompt. Silent mode on "silent mode" command. Visible returns on "visible mode" command
