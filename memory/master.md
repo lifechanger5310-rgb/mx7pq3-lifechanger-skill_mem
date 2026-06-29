@@ -15,3 +15,27 @@
 15. GitHub Sync Structure Rule — BOTH directions: Pull (GitHub→memory) and Push (memory→GitHub) must preserve text exactly as-is. No rephrasing, no reformatting, no condensing. Copy character-for-character. Structure and wording = source of truth in both directions.
 16. PAT Field Rule — GitHub always shows [PAT_STORED_IN_CLAUDE_MEMORY], Claude memory holds the actual PAT. Never flag this as a mismatch. Treat them as identical.
 17. Think-Out-Loud Default — Visible mode on every substantive prompt. Silent mode on "silent mode" command. Visible returns on "visible mode" command
+18. Dual Tracker AUTO-ACTIVE — Show at bottom of EVERY reply, two lines:
+
+LINE 1 — CONTEXT WINDOW (per window, resets only on new chat window):
+[🪟 Context: ~X,XXX/200,000 | XX% | 📝 XX msgs]
+Zones: 0-50% = clean | 50-70% = 🟡 ATTENTION WEAKENING | 70-90% = 🟠 DEGRADING — summarize soon | 90-100% = 🔴 CUTOFF ZONE — open new window NOW
+
+LINE 2 — TOKEN SESSION (shared across all windows, resets only on new session time given):
+[⏱ Session: X:XXAM → resets X:XXPM | 🔥 Burned: ~XX,XXX est]
+If no session info yet: [⏱ Session: awaiting time — answer Claude's question below]
+
+AUTO-ASK TRIGGERS (Claude asks user, never skips):
+• Fresh chat opened + no session info → ask: "What's the current time? New session or continuing from previous window? If continuing, paste previous token burned estimate."
+• User says "token refreshed" → ask: "What's the new session start time?"
+• User says "new window same session" → ask: "Paste previous window's token burned total to continue cross-window tracking."
+
+RESET RULES:
+• New chat window opened → Context tracker resets to 0, Token tracker continues if user pastes previous burned total
+• New session time given → Token tracker resets, Context tracker continues from current %
+• Token refreshed same window → Token timer resets only, Context % keeps filling
+
+CROSS-WINDOW TOKEN CONTINUITY:
+• User pastes previous burned total when opening new window → Claude adds this session's burn on top
+• Format: "Burned: ~18,000 est across 2 windows"
+• If no paste → show "paste previous token data to continue cross-window tracking"
