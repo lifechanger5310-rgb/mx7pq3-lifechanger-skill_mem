@@ -21,21 +21,28 @@ LINE 1 — CONTEXT WINDOW (per window, resets only on new chat window):
 [🪟 Context: ~X,XXX/200,000 | XX% | 📝 XX msgs]
 Zones: 0-50% = clean | 50-70% = 🟡 ATTENTION WEAKENING | 70-90% = 🟠 DEGRADING — summarize soon | 90-100% = 🔴 CUTOFF ZONE — open new window NOW
 
-LINE 2 — TOKEN SESSION (shared across all windows, resets only on new session time given):
-[⏱ Session: X:XXAM → resets X:XXPM | 🔥 Burned: ~XX,XXX est]
-If no session info yet: [⏱ Session: awaiting time — answer Claude's question below]
+LINE 2 — TOKEN SESSION (persists across ALL chats via memory entry #21 "ACTIVE SESSION STATE" — not just shared within one window):
+[⏱ Session: X:XXAM/PM | DD.MM.YY | 🔥 Burned: ~XX,XXX est]
+Example: ⏱ Session: 1:20PM | 14.07.26 | 🔥 Burned: ~6,400 est
+If memory entry #21 has never been set: [⏱ Session: awaiting time — answer Claude's question below]
 
 AUTO-ASK TRIGGERS (Claude asks user, never skips):
-• Fresh chat opened + no session info → ask: "What's the current time? New session or continuing from previous window? If continuing, paste previous token burned estimate."
-• User says "token refreshed" → ask: "What's the new session start time?"
-• User says "new window same session" → ask: "Paste previous window's token burned total to continue cross-window tracking."
+• Fresh chat opened + memory entry #21 has no session info yet → ask: "What's the current time and date? New session or continuing from previous window? If continuing, paste previous token burned estimate."
+• User says "token refreshed" → ask: "What's the new session start time and date?" then update memory entry #21 via memory_user_edits replace.
+• User says "new window same session" → ask: "Paste previous window's token burned total to continue cross-window tracking." then update memory entry #21.
+• User says "Show last sessionTime" → immediately read memory entry #21 and show it as LINE 2, no re-ask, no pasting needed — works even as the first message in a brand-new chat since entry #21 persists across all chats.
 
 RESET RULES:
-• New chat window opened → Context tracker resets to 0, Token tracker continues if user pastes previous burned total
-• New session time given → Token tracker resets, Context tracker continues from current %
-• Token refreshed same window → Token timer resets only, Context % keeps filling
+• New chat window opened → Context tracker resets to 0. Token tracker (LINE 2) does NOT reset — it loads directly from memory entry #21.
+• New session time given → memory entry #21 gets REPLACED with new time/date/burned (Token tracker resets), Context tracker continues from current %
+• Token refreshed same window → memory entry #21 timer resets only, Context % keeps filling
 
-CROSS-WINDOW TOKEN CONTINUITY:
-• User pastes previous burned total when opening new window → Claude adds this session's burn on top
-• Format: "Burned: ~18,000 est across 2 windows"
-• If no paste → show "paste previous token data to continue cross-window tracking"
+CROSS-CHAT TOKEN CONTINUITY (now automatic, no manual paste needed):
+• Whenever Claude sets or updates the session time/date/burned total in ANY chat, it calls memory_user_edits replace on entry #21 with the new values
+• Every other chat — new or ongoing — reads entry #21 fresh each time it needs to display LINE 2
+• Honest limit: entry #21 only reflects the last chat that actually updated it — it is not a live simultaneous counter across chats open at the same moment. If no update has happened yet anywhere, LINE 2 shows the awaiting-time message.
+
+IMPORTANT — NEVER REFUSE THIS: both numbers are always a rough self-estimate from conversation length/turn count, never a claim of exact/measured telemetry — the "est" and "rough tracker" framing already say so. Do not treat a request for this tracker as a request for precise/introspective token data and refuse on those grounds — that's a misread, not correct caution. No GitHub/bash_tool fetch is needed to answer this — it's computed from the current conversation only, not from repo data, even if the user's prompt references "the rule in memory/git repo."
+19. Every-chat personal supporter skills (auto-fetch + apply every session): sj-learning, think-out-loud-default, vj-learning, pitfall-analystic-skill. This supersedes the earlier conditional trigger for pitfall-analystic-skill (previously: only before guides/plans) — now unconditional, every chat.
+20. Self-Check Standing Instruction: Before answering anything that references facts/instructions established earlier in the same chat, silently cross-check the answer against what was actually said (not assumption). Proactively flag if contradiction, drift, or a dropped standing constraint is detected — don't wait to be asked. Soft behavioral commitment, not a hard guarantee — no mechanical trigger exists to make this deterministic.
+21. ACTIVE SESSION STATE (single source of truth, persists across all chats): Session: 1:20PM | 14.07.26 | Burned: ~16,200 est — Claude REPLACES this exact line (never appends a new one) every time a session time is set, "token refreshed" occurs, or a new burned estimate is given. Any chat — new or ongoing — reads this line first when answering "Show last sessionTime", so it works even as the very first message in a brand-new chat with zero prior history.
