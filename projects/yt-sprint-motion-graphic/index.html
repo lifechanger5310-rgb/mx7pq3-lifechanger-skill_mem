@@ -1,0 +1,958 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YouTube Success Sprint</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/TextPlugin.min.js"></script>
+<style>
+  :root {
+    --bg: #040404;
+    --green: #00ff88;
+    --red: #ff2244;
+    --gold: #ffd000;
+    --blue: #00cfff;
+    --white: #f0f0f0;
+    --dim: #888;
+    --panel: rgba(255,255,255,0.03);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    width: 1280px; height: 720px;
+    overflow: hidden;
+    position: relative;
+    user-select: none;
+  }
+
+  /* ── GRAIN OVERLAY ── */
+  body::before {
+    content:''; position:absolute; inset:0; z-index:999; pointer-events:none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.35;
+  }
+
+  /* ── STAGE ── */
+  #stage {
+    width:100%; height:100%;
+    position:relative;
+    background: radial-gradient(ellipse 80% 60% at 50% 50%, #0d0d14 0%, #040404 100%);
+  }
+
+  /* ── SCANLINE ── */
+  #scanline {
+    position:absolute; width:100%; height:2px;
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+    top: -4px; left:0; z-index:50; opacity:0;
+    box-shadow: 0 0 20px var(--green), 0 0 60px var(--green);
+  }
+
+  /* ── PROGRESS BAR ── */
+  #progressbar {
+    position:absolute; bottom:0; left:0; height:3px;
+    background: linear-gradient(90deg, var(--green), var(--blue));
+    width:0%; z-index:900;
+    box-shadow: 0 0 12px var(--green);
+    transition: none;
+  }
+
+  /* ── SCENE LABEL ── */
+  #scene-label {
+    position:absolute; top:28px; right:36px;
+    font-size:11px; letter-spacing:4px; text-transform:uppercase;
+    color: var(--dim); opacity:0; z-index:800;
+  }
+
+  /* ── TIMER ── */
+  #timer {
+    position:absolute; bottom:12px; right:20px;
+    font-size:10px; letter-spacing:2px; color:var(--dim); z-index:800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── BEAT FLASH ── */
+  #flash {
+    position:absolute; inset:0; z-index:100; pointer-events:none;
+    background: var(--green); opacity:0;
+    mix-blend-mode: overlay;
+  }
+
+  /* ── GRID BG ── */
+  #grid {
+    position:absolute; inset:0; opacity:0;
+    background-image:
+      linear-gradient(rgba(0,255,136,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* ── SCENES ── */
+  .scene {
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    flex-direction:column;
+    opacity:0; pointer-events:none;
+    z-index:10;
+  }
+
+  /* ── S0: INTRO ── */
+  #s0 { background: transparent; }
+  #s0 .eyebrow {
+    font-size:13px; letter-spacing:8px; text-transform:uppercase;
+    color: var(--green); margin-bottom:24px; opacity:0;
+  }
+  #s0 .main-title {
+    font-size:96px; font-weight:900; letter-spacing:-3px; line-height:1;
+    color: var(--white); opacity:0; transform:scaleX(0.6);
+    text-align:center;
+  }
+  #s0 .main-title span { color:var(--green); }
+  #s0 .subtitle {
+    font-size:18px; color:var(--dim); margin-top:20px; opacity:0;
+    letter-spacing:3px; text-transform:uppercase;
+  }
+  #s0 .tag {
+    position:absolute; bottom:80px;
+    font-size:11px; color:var(--dim); letter-spacing:3px; opacity:0;
+  }
+
+  /* ── S1: REALITY CHECK ── */
+  #s1 .section-head {
+    font-size:12px; letter-spacing:6px; color:var(--red);
+    text-transform:uppercase; margin-bottom:40px; opacity:0;
+  }
+  .stat-row {
+    display:flex; gap:60px; align-items:center; justify-content:center;
+    margin-bottom:30px;
+  }
+  .stat-block {
+    text-align:center; opacity:0; transform:translateY(40px);
+  }
+  .stat-num {
+    font-size:72px; font-weight:900; line-height:1;
+    background: linear-gradient(135deg, var(--gold), #ff8800);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .stat-label {
+    font-size:12px; letter-spacing:3px; color:var(--dim);
+    text-transform:uppercase; margin-top:6px;
+  }
+  .stat-divider {
+    width:2px; height:100px; background: rgba(255,255,255,.1);
+    opacity:0;
+  }
+  #s1 .bottom-line {
+    font-size:20px; color:var(--white); margin-top:30px; opacity:0;
+    text-align:center; max-width:700px; line-height:1.5;
+  }
+  #s1 .bottom-line span { color:var(--red); font-weight:700; }
+  #s1 .countdown {
+    font-size:14px; color:var(--gold); margin-top:12px; opacity:0;
+    letter-spacing:2px;
+  }
+
+  /* ── S2: PREREQUISITES ── */
+  #s2 .section-head {
+    font-size:12px; letter-spacing:6px; color:var(--blue);
+    text-transform:uppercase; margin-bottom:50px; opacity:0;
+  }
+  .prereq-grid {
+    display:grid; grid-template-columns:1fr 1fr; gap:20px;
+    width:900px;
+  }
+  .prereq-item {
+    display:flex; align-items:center; gap:16px;
+    background: var(--panel); border:1px solid rgba(255,255,255,.06);
+    padding:18px 24px; border-radius:8px;
+    opacity:0; transform:translateX(-30px);
+  }
+  .prereq-icon { font-size:24px; min-width:30px; }
+  .prereq-text { font-size:15px; color:var(--white); }
+  .prereq-sub { font-size:11px; color:var(--dim); margin-top:3px; }
+
+  /* ── S3: CHANNEL SETUP ── */
+  #s3 .section-head {
+    font-size:12px; letter-spacing:6px; color:var(--green);
+    text-transform:uppercase; margin-bottom:40px; opacity:0;
+  }
+  .steps-wrap { display:flex; gap:0; align-items:stretch; width:1100px; }
+  .step-node {
+    flex:1; text-align:center; opacity:0; transform:scaleY(0);
+    transform-origin: bottom;
+  }
+  .step-num {
+    font-size:32px; font-weight:900; color:var(--green);
+    text-shadow: 0 0 20px var(--green);
+  }
+  .step-bar {
+    width:2px; height:40px; background:var(--green);
+    margin:8px auto; opacity:0.3;
+  }
+  .step-text {
+    font-size:11px; color:var(--dim); max-width:90px; margin:0 auto;
+    letter-spacing:0.5px; line-height:1.4;
+  }
+
+  /* ── S4: NICHE ── */
+  #s4 .section-head {
+    font-size:12px; letter-spacing:6px; color:var(--gold);
+    text-transform:uppercase; margin-bottom:50px; opacity:0;
+  }
+  .venn-wrap {
+    position:relative; width:700px; height:300px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .venn-circle {
+    position:absolute; border-radius:50%;
+    border:2px solid; opacity:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:600; letter-spacing:1px;
+  }
+  #vc1 {
+    width:280px; height:280px; left:60px; top:10px;
+    border-color:var(--green); background:rgba(0,255,136,.04);
+    color:var(--green);
+  }
+  #vc2 {
+    width:280px; height:280px; left:210px; top:10px;
+    border-color:var(--blue); background:rgba(0,207,255,.04);
+    color:var(--blue);
+  }
+  #vc3 {
+    width:280px; height:280px; left:135px; top:-20px;
+    border-color:var(--gold); background:rgba(255,208,0,.04);
+    color:var(--gold);
+  }
+  .venn-label-left { position:absolute; left:80px; top:130px; text-align:center; opacity:0; }
+  .venn-label-right { position:absolute; right:80px; top:130px; text-align:center; opacity:0; }
+  .venn-label-top { position:absolute; top:10px; left:50%; transform:translateX(-50%); text-align:center; opacity:0; }
+  .venn-center {
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    font-size:14px; font-weight:700; color:var(--white);
+    text-align:center; opacity:0; z-index:5;
+    background:rgba(255,208,0,.15); padding:8px 14px; border-radius:20px;
+    border:1px solid var(--gold); letter-spacing:1px;
+    text-shadow: 0 0 10px var(--gold);
+  }
+  .venn-fast {
+    position:absolute; bottom:0; width:100%; text-align:center;
+    color:var(--dim); font-size:13px; opacity:0;
+  }
+
+  /* ── S5: 4-WEEK PLAN ── */
+  #s5 .section-head {
+    font-size:12px; letter-spacing:6px; color:var(--blue);
+    text-transform:uppercase; margin-bottom:50px; opacity:0;
+  }
+  .weeks-wrap { display:flex; gap:20px; width:1100px; }
+  .week-col {
+    flex:1; background:var(--panel); border:1px solid rgba(255,255,255,.06);
+    border-radius:10px; padding:20px; opacity:0; transform:translateY(60px);
+  }
+  .week-head {
+    font-size:11px; letter-spacing:4px; text-transform:uppercase;
+    color:var(--blue); margin-bottom:14px;
+    padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .week-item {
+    font-size:12px; color:var(--white); margin-bottom:8px;
+    padding-left:12px; position:relative; line-height:1.5;
+  }
+  .week-item::before {
+    content:'▸'; position:absolute; left:0; color:var(--green); font-size:10px;
+  }
+  .week-goal {
+    margin-top:14px; font-size:10px; letter-spacing:2px;
+    color:var(--gold); text-transform:uppercase;
+  }
+
+  /* ── S6: SHORTS ── */
+  #s6 { align-items: flex-start; justify-content: center; padding:60px 80px; }
+  #s6 .section-head {
+    font-size:12px; letter-spacing:6px; color:var(--red);
+    text-transform:uppercase; margin-bottom:40px; opacity:0; width:100%;
+  }
+  .shorts-cols { display:flex; gap:60px; width:100%; }
+  .shorts-left { flex:1; }
+  .shorts-right { flex:1; }
+  .hook-label {
+    font-size:64px; font-weight:900; color:var(--white);
+    line-height:1; opacity:0;
+  }
+  .hook-label span { color:var(--red); }
+  .hook-sub {
+    font-size:16px; color:var(--dim); margin-top:12px; opacity:0;
+    line-height:1.6;
+  }
+  .rule-list { margin-top:30px; }
+  .rule-item {
+    display:flex; align-items:flex-start; gap:12px;
+    margin-bottom:16px; opacity:0; transform:translateX(30px);
+  }
+  .rule-icon { color:var(--green); font-size:18px; flex-shrink:0; margin-top:1px; }
+  .rule-text { font-size:13px; color:var(--white); line-height:1.5; }
+
+  /* ── S7: NEVER/ALWAYS ── */
+  #s7 { flex-direction:row; align-items:stretch; padding:0; }
+  .half {
+    flex:1; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding:50px 60px; gap:16px;
+  }
+  .half-never { border-right:1px solid rgba(255,34,68,.2); }
+  .half-always { }
+  .half-head {
+    font-size:11px; letter-spacing:6px; text-transform:uppercase;
+    margin-bottom:20px; opacity:0;
+  }
+  .never-head { color:var(--red); }
+  .always-head { color:var(--green); }
+  .half-item {
+    width:100%; padding:12px 18px;
+    border-radius:6px; font-size:12px; line-height:1.4;
+    opacity:0; transform:scale(0.9);
+  }
+  .never-item {
+    background:rgba(255,34,68,.06); border:1px solid rgba(255,34,68,.15);
+    color:rgba(255,34,68,.9);
+  }
+  .always-item {
+    background:rgba(0,255,136,.04); border:1px solid rgba(0,255,136,.12);
+    color:rgba(0,255,136,.9);
+  }
+
+  /* ── S8: TIPS ── */
+  #s8 { padding:60px 80px; align-items:flex-start; }
+  #s8 .section-head {
+    font-size:12px; letter-spacing:6px; color:var(--gold);
+    text-transform:uppercase; margin-bottom:40px; opacity:0; width:100%;
+  }
+  .tips-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; width:100%; }
+  .tip-card {
+    background:var(--panel); border:1px solid rgba(255,255,255,.06);
+    border-radius:10px; padding:20px; opacity:0; transform:translateY(30px);
+  }
+  .tip-cat {
+    font-size:9px; letter-spacing:4px; text-transform:uppercase;
+    color:var(--gold); margin-bottom:10px;
+  }
+  .tip-text { font-size:13px; color:var(--white); line-height:1.6; }
+  .tip-text strong { color:var(--green); }
+
+  /* ── S9: MONETIZATION ── */
+  #s9 .section-head {
+    font-size:12px; letter-spacing:6px; color:var(--green);
+    text-transform:uppercase; margin-bottom:50px; opacity:0;
+  }
+  .mono-path { display:flex; align-items:center; gap:0; width:1100px; }
+  .mono-step {
+    flex:1; text-align:center; opacity:0; position:relative;
+  }
+  .mono-circle {
+    width:80px; height:80px; border-radius:50%;
+    border:2px solid var(--green); margin:0 auto 16px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; position:relative;
+    background:rgba(0,255,136,.04);
+    box-shadow: 0 0 20px rgba(0,255,136,.1);
+  }
+  .mono-arrow {
+    position:absolute; right:-30px; top:50%; transform:translateY(-50%);
+    color:var(--dim); font-size:20px; z-index:5;
+  }
+  .mono-title { font-size:13px; font-weight:600; color:var(--white); }
+  .mono-sub { font-size:11px; color:var(--dim); margin-top:4px; }
+  .mono-highlight { color:var(--gold); font-weight:700; }
+
+  /* ── S10: FINAL 3 ── */
+  #s10 { }
+  .final-rule {
+    width:1000px; margin-bottom:30px; opacity:0;
+    display:flex; align-items:center; gap:30px;
+    background:var(--panel); border-radius:12px; padding:28px 36px;
+    border-left:4px solid var(--green);
+    transform:translateX(-60px);
+  }
+  .final-num {
+    font-size:56px; font-weight:900; color:var(--green); min-width:70px;
+    text-shadow: 0 0 30px var(--green);
+    line-height:1;
+  }
+  .final-text { font-size:20px; color:var(--white); line-height:1.5; }
+  .final-text em { color:var(--gold); font-style:normal; font-weight:700; }
+  .finale-line {
+    font-size:14px; color:var(--dim); letter-spacing:3px;
+    text-transform:uppercase; margin-top:20px; opacity:0;
+  }
+  .finale-cta {
+    font-size:28px; font-weight:700; color:var(--green); margin-top:14px; opacity:0;
+    text-shadow: 0 0 30px var(--green);
+    letter-spacing:2px;
+  }
+
+  /* ── CONTROLS ── */
+  #controls {
+    position:absolute; bottom:20px; left:50%; transform:translateX(-50%);
+    display:flex; gap:16px; z-index:950;
+  }
+  .ctrl-btn {
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
+    color:var(--white); padding:8px 20px; border-radius:20px;
+    font-size:12px; letter-spacing:2px; cursor:pointer;
+    transition:all .2s;
+  }
+  .ctrl-btn:hover { background:rgba(0,255,136,.1); border-color:var(--green); color:var(--green); }
+
+  /* ── WATERMARK ── */
+  #watermark {
+    position:absolute; bottom:20px; left:24px;
+    font-size:10px; color:rgba(255,255,255,.12); letter-spacing:2px;
+    z-index:800;
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <div id="grid"></div>
+  <div id="scanline"></div>
+  <div id="flash"></div>
+
+  <!-- SCENE 0: INTRO TITLE -->
+  <div class="scene" id="s0">
+    <div class="eyebrow">BOG NARUTO PRESENTS</div>
+    <div class="main-title">YOUTUBE<br><span>SUCCESS</span><br>SPRINT</div>
+    <div class="subtitle">From Zero → Monetization in 30 Days</div>
+    <div class="tag">HyperFrames × ACE-Step × FFmpeg — Motion Brief</div>
+  </div>
+
+  <!-- SCENE 1: REALITY CHECK -->
+  <div class="scene" id="s1">
+    <div class="section-head">01 — Reality Check</div>
+    <div class="stat-row">
+      <div class="stat-block" id="sb1">
+        <div class="stat-num">1,000</div>
+        <div class="stat-label">Subscribers</div>
+      </div>
+      <div class="stat-divider" id="sd1"></div>
+      <div class="stat-block" id="sb2">
+        <div class="stat-num">4,000</div>
+        <div class="stat-label">Watch Hours</div>
+      </div>
+      <div class="stat-divider" id="sd2"></div>
+      <div class="stat-block" id="sb3">
+        <div class="stat-num">10M</div>
+        <div class="stat-label">Shorts Views</div>
+      </div>
+    </div>
+    <div class="bottom-line" id="bl1">
+      Full ad revenue needs <span>BOTH</span> thresholds — subscribers <span>AND</span> hours or views.<br>From Feb 2027: doubles to 8,000 hours or 20M Shorts.
+    </div>
+    <div class="countdown" id="cd1">🔴 ONE REALISTIC PATH: Shorts Volume + Viral Hit in 30 Days</div>
+  </div>
+
+  <!-- SCENE 2: PREREQUISITES -->
+  <div class="scene" id="s2">
+    <div class="section-head">02 — Prerequisites</div>
+    <div class="prereq-grid">
+      <div class="prereq-item pq"><span class="prereq-icon">📱</span><div><div class="prereq-text">Any Modern Smartphone</div><div class="prereq-sub">Vertical for Shorts, horizontal for long-form</div></div></div>
+      <div class="prereq-item pq"><span class="prereq-icon">🎙️</span><div><div class="prereq-text">$15–30 Lavalier Mic</div><div class="prereq-sub">Bad audio kills retention faster than bad video</div></div></div>
+      <div class="prereq-item pq"><span class="prereq-icon">💡</span><div><div class="prereq-text">Window Light / Ring Light</div><div class="prereq-sub">Dark grainy video loses viewers immediately</div></div></div>
+      <div class="prereq-item pq"><span class="prereq-icon">✂️</span><div><div class="prereq-text">CapCut Free</div><div class="prereq-sub">80/20 choice — DaVinci Resolve for pro later</div></div></div>
+      <div class="prereq-item pq"><span class="prereq-icon">🔐</span><div><div class="prereq-text">Google Account + 2SV ON</div><div class="prereq-sub">Required for YPP — do it on Day 1</div></div></div>
+      <div class="prereq-item pq"><span class="prereq-icon">🧠</span><div><div class="prereq-text">3–5 Hours/Day Minimum</div><div class="prereq-sub">Missed days kill momentum in a sprint</div></div></div>
+    </div>
+  </div>
+
+  <!-- SCENE 3: CHANNEL SETUP -->
+  <div class="scene" id="s3">
+    <div class="section-head">03 — Channel Setup (Do It Once, Right)</div>
+    <div class="steps-wrap">
+      <div class="step-node sn"><div class="step-num">01</div><div class="step-bar"></div><div class="step-text">Brand Account</div></div>
+      <div class="step-node sn"><div class="step-num">02</div><div class="step-bar"></div><div class="step-text">Clean Handle</div></div>
+      <div class="step-node sn"><div class="step-num">03</div><div class="step-bar"></div><div class="step-text">Phone Verify</div></div>
+      <div class="step-node sn"><div class="step-num">04</div><div class="step-bar"></div><div class="step-text">2SV On</div></div>
+      <div class="step-node sn"><div class="step-num">05</div><div class="step-bar"></div><div class="step-text">800×800 Avatar</div></div>
+      <div class="step-node sn"><div class="step-num">06</div><div class="step-bar"></div><div class="step-text">2560 Banner</div></div>
+      <div class="step-node sn"><div class="step-num">07</div><div class="step-bar"></div><div class="step-text">About Section</div></div>
+      <div class="step-node sn"><div class="step-num">08</div><div class="step-bar"></div><div class="step-text">Channel Keywords</div></div>
+      <div class="step-node sn"><div class="step-num">09</div><div class="step-bar"></div><div class="step-text">Watermark</div></div>
+      <div class="step-node sn"><div class="step-num">10</div><div class="step-bar"></div><div class="step-text">End Screen Template</div></div>
+    </div>
+  </div>
+
+  <!-- SCENE 4: NICHE -->
+  <div class="scene" id="s4">
+    <div class="section-head">04 — Niche: The Make-or-Break Decision</div>
+    <div class="venn-wrap">
+      <div class="venn-circle" id="vc1">You Can Talk<br>100+ Videos</div>
+      <div class="venn-circle" id="vc2">People<br>Search For It</div>
+      <div class="venn-circle" id="vc3">Room For<br>New Voice</div>
+      <div class="venn-label-left" id="vl1"><div style="font-size:12px;color:var(--dim)">Passion + SEO</div></div>
+      <div class="venn-label-right" id="vl2"><div style="font-size:12px;color:var(--dim)">SEO + Space</div></div>
+      <div class="venn-label-top" id="vl3"><div style="font-size:12px;color:var(--dim)">Passion + Space</div></div>
+      <div class="venn-center" id="vc-center">YOUR<br>NICHE</div>
+    </div>
+    <div class="venn-fast" id="vf1">Write 50 video ideas first. Can't reach 50? Niche is too narrow.</div>
+  </div>
+
+  <!-- SCENE 5: 4-WEEK PLAN -->
+  <div class="scene" id="s5">
+    <div class="section-head">05 — One-Month Content Sprint</div>
+    <div class="weeks-wrap">
+      <div class="week-col wk">
+        <div class="week-head">Week 1</div>
+        <div class="week-item">Full channel setup + verify</div>
+        <div class="week-item">7–10 Shorts published</div>
+        <div class="week-item">Test 2–3 hook styles</div>
+        <div class="week-item">1 long-form video</div>
+        <div class="week-item">Study analytics nightly</div>
+        <div class="week-goal">→ FIND WHAT WORKS</div>
+      </div>
+      <div class="week-col wk">
+        <div class="week-head">Week 2</div>
+        <div class="week-item">10–15 Shorts for the week</div>
+        <div class="week-item">Refine thumbnail template</div>
+        <div class="week-item">Improve first 1-second hook</div>
+        <div class="week-item">1 more long-form</div>
+        <div class="week-item">End screens + cards on</div>
+        <div class="week-goal">→ VOLUME + PACKAGING</div>
+      </div>
+      <div class="week-col wk">
+        <div class="week-head">Week 3</div>
+        <div class="week-item">Turn best Short into a series</div>
+        <div class="week-item">Rework underperforming ideas</div>
+        <div class="week-item">Publish another long-form</div>
+        <div class="week-item">Reply every comment 24hr</div>
+        <div class="week-goal">→ SERIES + ENGAGEMENT</div>
+      </div>
+      <div class="week-col wk">
+        <div class="week-head">Week 4</div>
+        <div class="week-item">12–20 Shorts — max push</div>
+        <div class="week-item">Cross-promote everywhere</div>
+        <div class="week-item">Check YPP eligibility daily</div>
+        <div class="week-item">Apply the MOMENT you qualify</div>
+        <div class="week-goal">→ THRESHOLD PUSH</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENE 6: SHORTS STRATEGY -->
+  <div class="scene" id="s6">
+    <div class="section-head">06 — Shorts: Your Primary Weapon</div>
+    <div class="shorts-cols">
+      <div class="shorts-left">
+        <div class="hook-label" id="hl1">FIRST<br><span>3 SEC</span></div>
+        <div class="hook-sub" id="hs1">Everything is decided here.<br>Hook or die. No exceptions.</div>
+      </div>
+      <div class="shorts-right">
+        <div class="rule-list">
+          <div class="rule-item ri"><span class="rule-icon">▶</span><div class="rule-text">Visual motion or text in the <strong>first frame</strong></div></div>
+          <div class="rule-item ri"><span class="rule-icon">▶</span><div class="rule-text"><strong>Immediate curiosity promise</strong> — "Stop doing X", "This one setting…"</div></div>
+          <div class="rule-item ri"><span class="rule-icon">▶</span><div class="rule-text">No logo animations. No "hey guys welcome back." <strong>Zero.</strong></div></div>
+          <div class="rule-item ri"><span class="rule-icon">▶</span><div class="rule-text">Loop-friendly ending — video restarts cleanly, viewer watches again</div></div>
+          <div class="rule-item ri"><span class="rule-icon">▶</span><div class="rule-text">15–45 seconds. Title front-loads benefit in first <strong>40 characters</strong></div></div>
+          <div class="rule-item ri"><span class="rule-icon">▶</span><div class="rule-text">Batch film 5–10 Shorts per session. Change shirt/background slightly</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENE 7: NEVER/ALWAYS -->
+  <div class="scene" id="s7">
+    <div class="half half-never">
+      <div class="half-head never-head">🔴 NEVER DO THIS</div>
+      <div class="half-item never-item ni">Buy any form of engagement</div>
+      <div class="half-item never-item ni">Post without a clear hook in first 3 seconds</div>
+      <div class="half-item never-item ni">Change niche mid-sprint</div>
+      <div class="half-item never-item ni">Use copyrighted music or long clips</div>
+      <div class="half-item never-item ni">Mass-delete underperforming videos</div>
+      <div class="half-item never-item ni">Rely only on long-form for 30-day goal</div>
+      <div class="half-item never-item ni">Quit before 30–50 videos posted</div>
+    </div>
+    <div class="half half-always">
+      <div class="half-head always-head">🟢 ALWAYS DO THIS</div>
+      <div class="half-item always-item ai">Phone verify + 2SV on Day 1</div>
+      <div class="half-item always-item ai">Study retention graph after every upload</div>
+      <div class="half-item always-item ai">Post on fixed daily schedule</div>
+      <div class="half-item always-item ai">Reply to comments in first 24 hours</div>
+      <div class="half-item always-item ai">Front-load value in titles and first frames</div>
+      <div class="half-item always-item ai">Batch-create when possible</div>
+      <div class="half-item always-item ai">Test one variable at a time</div>
+    </div>
+  </div>
+
+  <!-- SCENE 8: TIPS -->
+  <div class="scene" id="s8">
+    <div class="section-head">08 — High-Leverage Tips</div>
+    <div class="tips-grid">
+      <div class="tip-card tc"><div class="tip-cat">Packaging</div><div class="tip-text">Spend more time on <strong>first 3 seconds and thumbnail</strong> than the middle. Packaging decides if anyone watches.</div></div>
+      <div class="tip-card tc"><div class="tip-cat">Packaging</div><div class="tip-text">Study top 5–10 videos in your niche. <strong>Steal the pattern</strong>, not the content. Title + thumbnail + opening line.</div></div>
+      <div class="tip-card tc"><div class="tip-cat">Retention</div><div class="tip-text"><strong>Cut every second</strong> that doesn't move the story. Silence and filler are retention poison.</div></div>
+      <div class="tip-card tc"><div class="tip-cat">Retention</div><div class="tip-text">Pattern interrupts <strong>every 5–10 seconds</strong> in Shorts — zoom, text pop, cut, sound. Keep the brain engaged.</div></div>
+      <div class="tip-card tc"><div class="tip-cat">Growth</div><div class="tip-text">When a Short performs well, make <strong>3 more in the same format immediately.</strong> Ride the wave.</div></div>
+      <div class="tip-card tc"><div class="tip-cat">Workflow</div><div class="tip-text">Keep an <strong>idea bank</strong> in Notes. Idea | Hook | Format | Status. Your analytics beat any guru's advice.</div></div>
+    </div>
+  </div>
+
+  <!-- SCENE 9: MONETIZATION PATH -->
+  <div class="scene" id="s9">
+    <div class="section-head">09 — Monetization Path</div>
+    <div class="mono-path">
+      <div class="mono-step ms">
+        <div class="mono-circle">📊<div class="mono-arrow">→</div></div>
+        <div class="mono-title">Hit Thresholds</div>
+        <div class="mono-sub">500 subs + 3K hrs<br>(lower tier)</div>
+      </div>
+      <div class="mono-step ms">
+        <div class="mono-circle">📝<div class="mono-arrow">→</div></div>
+        <div class="mono-title">Apply YPP</div>
+        <div class="mono-sub">Studio → Earn tab<br>Apply immediately</div>
+      </div>
+      <div class="mono-step ms">
+        <div class="mono-circle">⏳<div class="mono-arrow">→</div></div>
+        <div class="mono-title">Review</div>
+        <div class="mono-sub">Days to weeks<br><span class="mono-highlight">Keep posting</span></div>
+      </div>
+      <div class="mono-step ms">
+        <div class="mono-circle">💳<div class="mono-arrow">→</div></div>
+        <div class="mono-title">Link AdSense</div>
+        <div class="mono-sub">Tax info needed<br>Threshold: $100</div>
+      </div>
+      <div class="mono-step ms">
+        <div class="mono-circle">💰</div>
+        <div class="mono-title">First Revenue</div>
+        <div class="mono-sub">Affiliates + Memberships<br><span class="mono-highlight">Before full ads too</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENE 10: FINAL 3 RULES -->
+  <div class="scene" id="s10">
+    <div class="final-rule fr"><div class="final-num">1</div><div class="final-text"><em>Consistency beats perfection.</em> A "good enough" Short posted today is worth more than a perfect one that never ships.</div></div>
+    <div class="final-rule fr"><div class="final-num">2</div><div class="final-text">The <em>first 3 seconds and thumbnail</em> decide almost everything. Master packaging before cinematic B-roll.</div></div>
+    <div class="final-rule fr"><div class="final-num">3</div><div class="final-text">One month is a <em>sprint to learn the system.</em> Real success compounds after month 1. Day 30 is not the finish line.</div></div>
+    <div class="finale-line" id="fl1">Film. Post. Measure. Improve. Repeat.</div>
+    <div class="finale-cta" id="fc1">NOW GO SET UP THE CHANNEL. →</div>
+  </div>
+
+  <!-- HUD -->
+  <div id="progressbar"></div>
+  <div id="scene-label">SCENE 01 / 11</div>
+  <div id="timer">0:00</div>
+  <div id="watermark">lifechanger5310-rgb · YT-AI-PLAYGROUND</div>
+
+  <!-- CONTROLS -->
+  <div id="controls">
+    <button class="ctrl-btn" onclick="startShow()">▶ PLAY</button>
+    <button class="ctrl-btn" onclick="stopShow()">■ STOP</button>
+    <button class="ctrl-btn" onclick="restartShow()">↺ RESTART</button>
+  </div>
+</div>
+
+<script>
+gsap.registerPlugin(TextPlugin);
+
+// ── WEB AUDIO ENGINE ──────────────────────────────────────
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playTone(freq, type, dur, vol = 0.3, delay = 0) {
+  const ctx = getAudio();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.type = type; osc.frequency.value = freq;
+  const t = ctx.currentTime + delay;
+  gain.gain.setValueAtTime(0, t);
+  gain.gain.linearRampToValueAtTime(vol, t + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  osc.start(t); osc.stop(t + dur + 0.05);
+}
+
+function playImpact() {
+  // Bass thump
+  playTone(55, 'sine', 0.4, 0.5);
+  playTone(110, 'square', 0.15, 0.1, 0.01);
+  // High snap
+  playTone(1200, 'square', 0.06, 0.08, 0.01);
+}
+
+function playWhoosh() {
+  const ctx = getAudio();
+  const buf = ctx.createBuffer(1, ctx.sampleRate * 0.4, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const gain = ctx.createGain();
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass'; filter.frequency.value = 800; filter.Q.value = 0.5;
+  const t = ctx.currentTime;
+  filter.frequency.linearRampToValueAtTime(2000, t + 0.3);
+  gain.gain.setValueAtTime(0.15, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+  src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+  src.start(t); src.stop(t + 0.4);
+}
+
+function playBeat(vol = 0.18) {
+  playTone(60, 'sine', 0.3, vol);
+  playTone(120, 'sawtooth', 0.05, 0.04, 0.01);
+}
+
+function playRiser(dur = 3) {
+  const ctx = getAudio();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.type = 'sawtooth';
+  const t = ctx.currentTime;
+  osc.frequency.setValueAtTime(80, t);
+  osc.frequency.exponentialRampToValueAtTime(800, t + dur);
+  gain.gain.setValueAtTime(0.001, t);
+  gain.gain.linearRampToValueAtTime(0.08, t + dur * 0.7);
+  gain.gain.linearRampToValueAtTime(0, t + dur);
+  osc.start(t); osc.stop(t + dur + 0.1);
+}
+
+function playChord(notes, dur = 0.6, vol = 0.06) {
+  notes.forEach(f => playTone(f, 'sine', dur, vol));
+}
+
+// ── BEAT GRID – 2 BPM ticks every 2 seconds (30 BPM feel) ──
+let beatInterval = null;
+let beatCount = 0;
+function startBeats() {
+  beatCount = 0;
+  beatInterval = setInterval(() => {
+    beatCount++;
+    playBeat(beatCount % 4 === 0 ? 0.28 : 0.14);
+    gsap.to('#flash', {opacity: beatCount%4===0?0.08:0.03, duration:0.05, yoyo:true, repeat:1});
+  }, 1000);
+}
+function stopBeats() {
+  if (beatInterval) clearInterval(beatInterval);
+}
+
+// ── TIMELINE STATE ─────────────────────────────────────────
+let masterTL = null;
+let running = false;
+let timerInterval = null;
+
+function updateTimer(elapsed) {
+  const m = Math.floor(elapsed / 60);
+  const s = Math.floor(elapsed % 60).toString().padStart(2,'0');
+  document.getElementById('timer').textContent = `${m}:${s}`;
+}
+
+function flashScanline() {
+  gsap.fromTo('#scanline', {top:'-4px', opacity:0.8}, {top:'724px', opacity:0, duration:0.6, ease:'none'});
+}
+
+function showScene(label) {
+  document.getElementById('scene-label').textContent = label;
+  gsap.to('#scene-label', {opacity:1, duration:0.3});
+}
+
+function hideAllScenes() {
+  document.querySelectorAll('.scene').forEach(s => {
+    gsap.set(s, {opacity:0, display:'flex'});
+  });
+}
+
+// ── BUILD MASTER TIMELINE ──────────────────────────────────
+function buildTimeline() {
+  const tl = gsap.timeline({ paused: true });
+  const TOTAL = 110; // seconds
+
+  // PROGRESS BAR
+  tl.to('#progressbar', { width:'100%', duration: TOTAL, ease:'none' }, 0);
+
+  // ── SCENE 0: INTRO (0 – 10s) ──────────────────────────
+  tl.set('#s0', { opacity:1 }, 0);
+  tl.add(() => { showScene('INTRO / 11'); playImpact(); playRiser(3); }, 0);
+  tl.to('#grid', { opacity:1, duration:1 }, 0);
+  tl.to('#s0 .eyebrow', { opacity:1, duration:0.5 }, 0.3);
+  tl.from('#s0 .main-title', { scaleX:0.2, opacity:0, duration:0.6, ease:'expo.out' }, 0.5);
+  tl.to('#s0 .main-title', { opacity:1 }, 0.5);
+  tl.to('#s0 .subtitle', { opacity:1, duration:0.6 }, 1.4);
+  tl.to('#s0 .tag', { opacity:1, duration:0.5 }, 2.2);
+  // exit
+  tl.to('#s0', { opacity:0, duration:0.4 }, 9.5);
+  tl.to('#grid', { opacity:0, duration:0.4 }, 9.5);
+
+  // ── SCENE 1: REALITY CHECK (10 – 22s) ─────────────────
+  tl.add(() => { flashScanline(); showScene('REALITY CHECK / 11'); playWhoosh(); }, 10);
+  tl.set('#s1', { opacity:1 }, 10);
+  tl.to('#s1 .section-head', { opacity:1, duration:0.4 }, 10.2);
+  tl.to('#sb1', { opacity:1, y:0, duration:0.5, ease:'back.out' }, 10.8);
+  tl.add(() => playChord([55*2,55*3,55*5], 1, 0.05), 10.8);
+  tl.to('#sd1', { opacity:1, scaleY:1, duration:0.3 }, 11.1);
+  tl.to('#sb2', { opacity:1, y:0, duration:0.5, ease:'back.out' }, 11.4);
+  tl.add(() => playChord([65*2,65*3,65*5], 1, 0.05), 11.4);
+  tl.to('#sd2', { opacity:1, scaleY:1, duration:0.3 }, 11.7);
+  tl.to('#sb3', { opacity:1, y:0, duration:0.5, ease:'back.out' }, 12.0);
+  tl.add(() => playChord([80*2,80*3,80*5], 1, 0.05), 12.0);
+  tl.to('#bl1', { opacity:1, duration:0.6 }, 13.2);
+  tl.to('#cd1', { opacity:1, duration:0.6 }, 14.5);
+  tl.add(() => playImpact(), 14.5);
+  tl.to('#s1', { opacity:0, duration:0.4 }, 21.5);
+
+  // ── SCENE 2: PREREQUISITES (22 – 34s) ─────────────────
+  tl.add(() => { flashScanline(); showScene('PREREQUISITES / 11'); playWhoosh(); }, 22);
+  tl.set('#s2', { opacity:1 }, 22);
+  tl.to('#s2 .section-head', { opacity:1, duration:0.4 }, 22.2);
+  gsap.utils.toArray('.pq').forEach((el, i) => {
+    tl.to(el, { opacity:1, x:0, duration:0.4, ease:'power2.out' }, 22.7 + i * 0.3);
+    tl.add(() => playBeat(0.08), 22.7 + i * 0.3);
+  });
+  tl.to('#s2', { opacity:0, duration:0.4 }, 33.5);
+
+  // ── SCENE 3: CHANNEL SETUP (34 – 45s) ─────────────────
+  tl.add(() => { flashScanline(); showScene('CHANNEL SETUP / 11'); playWhoosh(); }, 34);
+  tl.set('#s3', { opacity:1 }, 34);
+  tl.to('#s3 .section-head', { opacity:1, duration:0.4 }, 34.2);
+  gsap.utils.toArray('.sn').forEach((el, i) => {
+    tl.to(el, { opacity:1, scaleY:1, duration:0.35, ease:'power3.out' }, 34.6 + i * 0.22);
+    tl.add(() => playTone(220 + i*40, 'sine', 0.15, 0.05), 34.6 + i * 0.22);
+  });
+  tl.to('#s3', { opacity:0, duration:0.4 }, 44.5);
+
+  // ── SCENE 4: NICHE (45 – 57s) ──────────────────────────
+  tl.add(() => { flashScanline(); showScene('NICHE SELECTION / 11'); playWhoosh(); }, 45);
+  tl.set('#s4', { opacity:1 }, 45);
+  tl.to('#s4 .section-head', { opacity:1, duration:0.4 }, 45.2);
+  tl.to('#vc1', { opacity:1, duration:0.6, ease:'power2.out' }, 45.6);
+  tl.to('#vc2', { opacity:1, duration:0.6 }, 46.0);
+  tl.to('#vc3', { opacity:1, duration:0.6 }, 46.4);
+  tl.to('#vl1', { opacity:1, duration:0.4 }, 46.8);
+  tl.to('#vl2', { opacity:1, duration:0.4 }, 47.0);
+  tl.to('#vl3', { opacity:1, duration:0.4 }, 47.2);
+  tl.to('#vc-center', { opacity:1, scale:1, duration:0.5, ease:'back.out' }, 47.8);
+  tl.add(() => { playChord([220,277,330,440], 1.5, 0.06); }, 47.8);
+  tl.to('#vf1', { opacity:1, duration:0.5 }, 49.0);
+  tl.to('#s4', { opacity:0, duration:0.4 }, 56.5);
+
+  // ── SCENE 5: 4-WEEK (57 – 70s) ────────────────────────
+  tl.add(() => { flashScanline(); showScene('4-WEEK SPRINT / 11'); playWhoosh(); playRiser(2); }, 57);
+  tl.set('#s5', { opacity:1 }, 57);
+  tl.to('#s5 .section-head', { opacity:1, duration:0.4 }, 57.2);
+  gsap.utils.toArray('.wk').forEach((el, i) => {
+    tl.to(el, { opacity:1, y:0, duration:0.5, ease:'power3.out' }, 57.6 + i * 0.5);
+    tl.add(() => playBeat(0.1), 57.6 + i * 0.5);
+  });
+  tl.to('#s5', { opacity:0, duration:0.4 }, 69.5);
+
+  // ── SCENE 6: SHORTS (70 – 81s) ────────────────────────
+  tl.add(() => { flashScanline(); showScene('SHORTS STRATEGY / 11'); playWhoosh(); }, 70);
+  tl.set('#s6', { opacity:1 }, 70);
+  tl.to('#s6 .section-head', { opacity:1, duration:0.4 }, 70.2);
+  tl.to('#hl1', { opacity:1, duration:0.4 }, 70.6);
+  tl.add(() => playImpact(), 70.6);
+  tl.to('#hs1', { opacity:1, duration:0.5 }, 71.2);
+  gsap.utils.toArray('.ri').forEach((el, i) => {
+    tl.to(el, { opacity:1, x:0, duration:0.4, ease:'power2.out' }, 71.6 + i * 0.45);
+    tl.add(() => playBeat(0.07), 71.6 + i * 0.45);
+  });
+  tl.to('#s6', { opacity:0, duration:0.4 }, 80.5);
+
+  // ── SCENE 7: NEVER/ALWAYS (81 – 92s) ──────────────────
+  tl.add(() => { flashScanline(); showScene('NEVER / ALWAYS / 11'); playWhoosh(); }, 81);
+  tl.set('#s7', { opacity:1 }, 81);
+  tl.to('#s7 .never-head', { opacity:1, duration:0.4 }, 81.3);
+  tl.to('#s7 .always-head', { opacity:1, duration:0.4 }, 81.3);
+  const niItems = gsap.utils.toArray('.ni');
+  const aiItems = gsap.utils.toArray('.ai');
+  for (let i = 0; i < 7; i++) {
+    tl.to(niItems[i], { opacity:1, scale:1, duration:0.35, ease:'back.out' }, 81.8 + i * 0.3);
+    tl.to(aiItems[i], { opacity:1, scale:1, duration:0.35, ease:'back.out' }, 81.8 + i * 0.3);
+    tl.add(() => playTone(i%2===0?200:400,'square',0.1,0.04), 81.8 + i * 0.3);
+  }
+  tl.to('#s7', { opacity:0, duration:0.4 }, 91.5);
+
+  // ── SCENE 8: TIPS (92 – 102s) ─────────────────────────
+  tl.add(() => { flashScanline(); showScene('HIGH-LEVERAGE TIPS / 11'); playWhoosh(); }, 92);
+  tl.set('#s8', { opacity:1 }, 92);
+  tl.to('#s8 .section-head', { opacity:1, duration:0.4 }, 92.2);
+  gsap.utils.toArray('.tc').forEach((el, i) => {
+    tl.to(el, { opacity:1, y:0, duration:0.4, ease:'power2.out' }, 92.6 + i * 0.35);
+    tl.add(() => playBeat(0.07), 92.6 + i * 0.35);
+  });
+  tl.to('#s8', { opacity:0, duration:0.4 }, 101.5);
+
+  // ── SCENE 9: MONETIZATION (102 – 109s) ────────────────
+  tl.add(() => { flashScanline(); showScene('MONETIZATION PATH / 11'); playWhoosh(); }, 102);
+  tl.set('#s9', { opacity:1 }, 102);
+  tl.to('#s9 .section-head', { opacity:1, duration:0.4 }, 102.2);
+  gsap.utils.toArray('.ms').forEach((el, i) => {
+    tl.to(el, { opacity:1, duration:0.5, ease:'power2.out' }, 102.6 + i * 0.5);
+    tl.add(() => playChord([110*(i+1), 110*(i+2)], 0.8, 0.04), 102.6 + i * 0.5);
+  });
+  tl.to('#s9', { opacity:0, duration:0.4 }, 108.5);
+
+  // ── SCENE 10: FINAL 3 (109 – 110s+) ──────────────────
+  tl.add(() => { flashScanline(); showScene('FINAL RULES / 11'); playImpact(); playRiser(1.5); }, 109);
+  tl.set('#s10', { opacity:1 }, 109);
+  gsap.utils.toArray('.fr').forEach((el, i) => {
+    tl.to(el, { opacity:1, x:0, duration:0.6, ease:'power3.out' }, 109.3 + i * 0.7);
+    tl.add(() => playImpact(), 109.3 + i * 0.7);
+  });
+  tl.to('#fl1', { opacity:1, duration:0.5 }, 111.2);
+  tl.to('#fc1', { opacity:1, duration:0.6, ease:'power2.out' }, 112.0);
+  tl.add(() => { playChord([110,138,165,220], 2.0, 0.08); }, 112.0);
+
+  return tl;
+}
+
+// ── CONTROLS ──────────────────────────────────────────────
+let elapsed = 0;
+function startShow() {
+  if (running) return;
+  running = true;
+  getAudio(); // unlock context
+  startBeats();
+  hideAllScenes();
+  gsap.set('#progressbar', { width:'0%' });
+
+  masterTL = buildTimeline();
+  masterTL.play();
+
+  elapsed = 0;
+  timerInterval = setInterval(() => {
+    elapsed += 0.1;
+    updateTimer(elapsed);
+    if (elapsed >= 114) stopShow();
+  }, 100);
+}
+
+function stopShow() {
+  running = false;
+  stopBeats();
+  if (masterTL) { masterTL.pause(); masterTL.kill(); masterTL = null; }
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function restartShow() {
+  stopShow();
+  document.querySelectorAll('.scene').forEach(s => gsap.set(s, {opacity:0}));
+  gsap.set('#progressbar', { width:'0%' });
+  gsap.set('#scene-label', { opacity:0 });
+  updateTimer(0);
+  setTimeout(startShow, 300);
+}
+
+// Auto-start hint on click
+document.getElementById('stage').addEventListener('click', () => {
+  if (!running) startShow();
+});
+</script>
+</body>
+</html>
